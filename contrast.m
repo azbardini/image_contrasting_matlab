@@ -1,58 +1,45 @@
-% 
-% image = imread('kids.tif');
-% equalized = histogramEq(image);
-% final = contrastStretch(equalized);
-% showImages(image, equalized, final)
-% 
-% image = imread('spine.tif');
-% equalized = histogramEq(image);
-% final = contrastStretch(equalized);
-% showImages(image, equalized, final)
+image = imread('kids.tif');
+equalized = histogramEq(image);
+final = contrastStretch(equalized, 1);
+showWBImages(image, equalized, final)
+
+image = imread('spine.tif');
+equalized = histogramEq(image);
+final = contrastStretch(equalized, 1);
+showWBImages(image, equalized, final)
 
 image = imread('line.jpg');
-
 hsvImage = rgb2hsv(image);
 hue = hsvImage(:,:,1);
 saturation = hsvImage(:,:,2);
 value = hsvImage(:,:,3);
 
-equalized = hist_eq(value);
-finalValue = contrastStretch(equalized);
-figure,imshow(finalValue)
+equalized = histogramEq(im2uint8(value));
+final= contrastStretch(equalized, 0);
 
-newHsvImage = cat(3,hue,saturation,finalValue);
-finalImage = hsv2rgb(newHsvImage);
+%concatena H S e V em 3 dimensoes
+hsvHighValue = cat(3,hue,saturation,im2double(final));
+backToRGB = hsv2rgb(hsvHighValue);
+showColorImages(image, hsvImage, hsvHighValue, backToRGB);
 
-subplot(2,2,3);
-imshow(hsvImage);
-title("Original HSV");
-
-subplot(2,2,2);
-imshow(newHsvImage);
-title("Equalized and Contrasted Image");
-
-subplot(2,2,1);
-imshow(image);
-title("Original Image");
-
-subplot(2,2,4);
-imshow(finalImage);
-title("Equalized and Constrated Image");
-
-
-function y = contrastStretch(img)
+function y = contrastStretch(img, useDouble)
     % transforma a imagem de signed pra double precision para evitar erros
     % de calculos abaixo de -255
     i = img(:,:,1);
-%    i = im2double(i);                       
+    if useDouble == 1
+        i = im2double(i);  
+        topValue = 1;
+    else
+        topValue = 255;
+    end
     % acha o pixel de menor valor na imagem
     minValue = min(min(i));
     % acha o pixel de maior valor na imagem
     maxValue = max(max(i));
     % acha a inclinaçcao do ponto de junção (0,255) para (minValue,maxValue)
-    slope = 255 /(maxValue - minValue);
+    slope = topValue /(maxValue - minValue);
     % acha a intersecção da linha com o eixo
-    intersection = 255 - slope*maxValue;
+    intersection = topValue - slope*maxValue;
     % transforma a imagem de acordo com a inclinação
     y = slope*i + intersection;
 end
@@ -99,7 +86,7 @@ function y = histogramEq(img)
     y = imgHistogramed;
 end
 
-function y = showImages(image, equalized, final)
+function y = showWBImages(image, equalized, final)
     figure
     subplot(2,3,1);
     imhist(image);
@@ -118,29 +105,19 @@ function y = showImages(image, equalized, final)
     imshow(final);
 end
 
-function I_out=hist_eq(I_in)
-[M,N]=size(I_in);
-for i=1:256
-    % Soma todos os valores de "i-1" da imagem no H(i)
-   h(i)=sum(sum(I_in == i-1));
-end;
-
-% Imagem de saida = Imagem de entrada
-I_out=I_in;
-
-% Soma todos os valores de todos os pixeis da imagem (já foram somados em
-% cada h(i)
-
-s=sum(h);
-
-for i=1:256
-    % Posicoes é um vetor de todas as posicoes que "i-1" aparece na imagem
-    % I_in
-   posicoes=find(I_in==i-1);
-   % Todas as posicoes de I_out recebem a soma de H(1) até H(i) dividido
-   % pela soma de todos os pixeis da imagem * 255
-   I_out(posicoes)=sum(h(1:i))/s*255;
+function y = showColorImages(image, hsvImage, hsvHighValue, backToRGB)
+    figure
+    subplot(2,2,1);
+    imshow(image);
+    title("Imagem Original");
+    subplot(2,2,2);
+    imshow(hsvImage);
+    title("Imagem em HSV");
+    subplot(2,2,3);
+    imshow(hsvHighValue);
+    title("Imagem em HSV com V alterado");
+    subplot(2,2,4);
+    imshow(backToRGB);
+    title("Convertida para RGB");
 end
-end
-
 
