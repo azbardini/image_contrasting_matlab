@@ -1,2 +1,2 @@
-# image_contrasting_matlab
+# Image Contrasting using MATLAB
 Image contrast in MATLAB using Histogram Equalization and Contrast Stretching
